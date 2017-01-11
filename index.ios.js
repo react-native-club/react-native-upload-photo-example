@@ -9,26 +9,77 @@ import {
   AppRegistry,
   StyleSheet,
   Text,
-  View
+  View,
+  PixelRatio,
+  TouchableOpacity,
+  Image,
+  Platform
 } from 'react-native';
+import ImagePicker from 'react-native-image-picker';
 
 export default class UploadPhoto extends Component {
+
+  state = {
+    avatarSource: null
+  };
+
+  selectPhotoTapped() {
+    const options = {
+      quality: 1.0,
+      maxWidth: 500,
+      maxHeight: 500,
+      storageOptions: {
+        skipBackup: true
+      }
+    };
+
+    ImagePicker.showImagePicker(options, (response) => {
+      console.log('Response = ', response);
+
+      if (response.didCancel) {
+        console.log('User cancelled photo picker');
+      }
+      else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      }
+      else if (response.customButton) {
+        console.log('User tapped custom button: ', response.customButton);
+      }
+      else {
+        var source;
+
+        // You can display the image using either:
+        // source = { uri: 'data:image/jpeg;base64,' + response.data };
+
+        // Or:
+        if (Platform.OS === 'android') {
+          source = { uri: response.uri };
+        } else {
+          console.log('uri', response.uri.replace('file://', ''));
+          source = { uri: response.uri.replace('file://', '') };
+        }
+
+        this.setState({
+          avatarSource: source
+        });
+      }
+    });
+  }
+
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.ios.js
-        </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+D or shake for dev menu
-        </Text>
+        <TouchableOpacity onPress={this.selectPhotoTapped.bind(this)}>
+          <View style={[styles.avatar, styles.avatarContainer, {marginBottom: 20}]}>
+          { this.state.avatarSource === null ? <Text>Select a Photo</Text> :
+            <Image style={styles.avatar} source={this.state.avatarSource} />
+          }
+          </View>
+        </TouchableOpacity>
       </View>
     );
   }
+
 }
 
 const styles = StyleSheet.create({
@@ -36,18 +87,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#F5FCFF'
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+  avatarContainer: {
+    borderColor: '#9B9B9B',
+    borderWidth: 1 / PixelRatio.get(),
+    justifyContent: 'center',
+    alignItems: 'center'
   },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+  avatar: {
+    borderRadius: 75,
+    width: 150,
+    height: 150
+  }
 });
 
 AppRegistry.registerComponent('UploadPhoto', () => UploadPhoto);
